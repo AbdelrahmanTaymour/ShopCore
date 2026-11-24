@@ -4,3 +4,9 @@ dist
 .env.local
 *.log
 coverage
+
+.windsurf
+.agents
+.claude
+.cursor
+.devin
