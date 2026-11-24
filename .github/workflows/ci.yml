@@ -38,6 +38,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        working-directory: apps/api
+        run: pnpm exec prisma generate
+
       - name: Enable pgvector extension
         run: |
           PGPASSWORD=shopcore psql -h localhost -U shopcore -d shopcore_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
