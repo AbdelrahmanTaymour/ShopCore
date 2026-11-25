@@ -1,9 +1,37 @@
 import { prisma } from "../../config/prisma";
 import { AppError } from "../../middleware/errorHandler";
+import { env } from "../../config/env";
+import Stripe from "stripe";
 
 interface CheckoutItem {
   productId: string;
   quantity: number;
+}
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+
+export async function createCheckoutSession(orderId: string, total: number) {
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: { name: `ShopCore Order ${orderId}`, tax_code: "txcd_99999999" },
+          unit_amount: Math.round(total * 100), // Stripe uses cents
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: "http://localhost:5173/order-success",
+    cancel_url: "http://localhost:5173/order-cancelled",
+    metadata: { orderId }, // ties the Stripe session back to our order
+    // Our test Stripe account has Managed Payments on by default, which requires
+    // an eligible tax_code per product. We are not modeling tax in ShopCore,
+    // so disable it for this session.
+    managed_payments: { enabled: false },
+  } as any);
+  return session.url;
 }
 
 export async function checkout(userId: string, items: CheckoutItem[]) {
@@ -36,7 +64,8 @@ export async function checkout(userId: string, items: CheckoutItem[]) {
       data: {
         userId,
         total,
-        status: "PAID",
+        // status defaults to PENDING (see schema.prisma); the Stripe webhook
+        // flips it to PAID once payment is actually confirmed.
         items: { create: orderItemsData },
       },
       include: { items: true },
