@@ -60,6 +60,8 @@ jobs:
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-min-10-chars
           WEBHOOK_SIGNING_SECRET: test-secret-min-10-chars
+          STRIPE_SECRET_KEY: sk_test_placeholder_min_10_chars
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder_min_10_chars
 
       - name: Build
         working-directory: apps/api
