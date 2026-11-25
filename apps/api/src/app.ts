@@ -5,11 +5,13 @@ import { errorHandler } from "./middleware/errorHandler";
 import { authRouter } from "./modules/auth/routes";
 import { productsRouter } from "./modules/products/routes";
 import { ordersRouter } from "./modules/orders/routes";
+import { globalRateLimit } from "./middleware/rateLimit";
 
 export function createApp(): Express {
   const app = express();
 
   app.use(helmet());
+  app.use(globalRateLimit);
   app.use(cors());
   app.use(express.json());
 

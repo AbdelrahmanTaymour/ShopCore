@@ -1,11 +1,13 @@
 import request from "supertest";
 import { createApp } from "../../src/app";
 import { prisma } from "../../src/config/prisma";
+import { redis } from "../../src/config/redis";
 
 const app = createApp();
 
 afterAll(async () => {
   await prisma.$disconnect();
+  redis.disconnect();
 });
 
 async function registerAndGetToken(
