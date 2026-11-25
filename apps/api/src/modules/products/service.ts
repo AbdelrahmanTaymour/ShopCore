@@ -1,11 +1,14 @@
 import { prisma } from "../../config/prisma";
+import { cacheAside, invalidatePattern } from "../../lib/cache";
 
 export async function listProducts() {
-  return prisma.product.findMany();
+  return cacheAside("products:list", 3600, () => prisma.product.findMany());
 }
 
 export async function getProduct(id: string) {
-  return prisma.product.findUnique({ where: { id } });
+  return cacheAside(`products:${id}`, 3600, () =>
+    prisma.product.findUnique({ where: { id } }),
+  );
 }
 
 export async function createProduct(data: {
@@ -14,7 +17,9 @@ export async function createProduct(data: {
   price: number;
   stock: number;
 }) {
-  return prisma.product.create({ data });
+  const product = await prisma.product.create({ data });
+  await invalidatePattern("products:*");
+  return product;
 }
 
 export async function updateProduct(
@@ -26,9 +31,12 @@ export async function updateProduct(
     stock: number;
   }>,
 ) {
-  return prisma.product.update({ where: { id }, data });
+  const updated = await prisma.product.update({ where: { id }, data });
+  await invalidatePattern("products:*");
+  return updated;
 }
 
 export async function deleteProduct(id: string) {
-  return prisma.product.delete({ where: { id } });
+  await prisma.product.delete({ where: { id } });
+  await invalidatePattern("products:*");
 }
