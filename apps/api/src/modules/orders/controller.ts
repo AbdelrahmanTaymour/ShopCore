@@ -11,7 +11,11 @@ export async function checkout(
   try {
     const { items } = checkoutSchema.parse(req.body);
     const order = await orderService.checkout(req.user!.id, items);
-    res.status(201).json(order);
+    const checkoutUrl = await orderService.createCheckoutSession(
+      order.id,
+      order.total,
+    );
+    res.status(201).json({ ...order, checkoutUrl });
   } catch (err) {
     next(err);
   }

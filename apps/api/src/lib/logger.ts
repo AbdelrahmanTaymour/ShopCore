@@ -10,5 +10,6 @@ export const logger = pino({
     "*.password",
     "*.signingSecret",
     "*.secret",
+    "*.stripeSecretKey",
   ],
 });
