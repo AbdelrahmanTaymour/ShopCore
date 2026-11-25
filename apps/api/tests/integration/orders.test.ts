@@ -3,6 +3,21 @@ import { createApp } from "../../src/app";
 import { prisma } from "../../src/config/prisma";
 import { redis } from "../../src/config/redis";
 
+// Checkout calls out to Stripe to create a real Checkout Session. We don't
+// want integration tests hitting the network or depending on a real Stripe
+// key, so replace the SDK with a fake that returns a fixed session URL.
+jest.mock("stripe", () => {
+  return jest.fn().mockImplementation(() => ({
+    checkout: {
+      sessions: {
+        create: jest
+          .fn()
+          .mockResolvedValue({ url: "https://checkout.stripe.com/test-session" }),
+      },
+    },
+  }));
+});
+
 const app = createApp();
 
 afterAll(async () => {
