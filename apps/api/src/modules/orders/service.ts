@@ -2,6 +2,7 @@ import { prisma } from "../../config/prisma";
 import { AppError } from "../../middleware/errorHandler";
 import { env } from "../../config/env";
 import Stripe from "stripe";
+import { emitOrderUpdate } from "../notifications/socket";
 
 interface CheckoutItem {
   productId: string;
@@ -17,7 +18,10 @@ export async function createCheckoutSession(orderId: string, total: number) {
       {
         price_data: {
           currency: "usd",
-          product_data: { name: `ShopCore Order ${orderId}`, tax_code: "txcd_99999999" },
+          product_data: {
+            name: `ShopCore Order ${orderId}`,
+            tax_code: "txcd_99999999",
+          },
           unit_amount: Math.round(total * 100), // Stripe uses cents
         },
         quantity: 1,
@@ -35,7 +39,7 @@ export async function createCheckoutSession(orderId: string, total: number) {
 }
 
 export async function checkout(userId: string, items: CheckoutItem[]) {
-  return prisma.$transaction(async (tx) => {
+  const order = await prisma.$transaction(async (tx) => {
     let total = 0;
     const orderItemsData = [];
 
@@ -71,6 +75,14 @@ export async function checkout(userId: string, items: CheckoutItem[]) {
       include: { items: true },
     });
   });
+
+  emitOrderUpdate(order.userId, {
+    eventId: order.id,
+    status: order.status,
+    timestamp: new Date().toISOString(),
+  });
+
+  return order;
 }
 
 export async function listUserOrders(userId: string) {
