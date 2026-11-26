@@ -5,6 +5,7 @@ import * as productController from "./controller";
 export const productsRouter: Router = Router();
 
 // public reads
+productsRouter.get("/search", productController.search);
 productsRouter.get("/", productController.list);
 productsRouter.get("/:id", productController.get);
 

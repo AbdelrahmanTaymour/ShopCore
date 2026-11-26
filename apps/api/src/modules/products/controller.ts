@@ -16,6 +16,20 @@ export async function list(
   }
 }
 
+export async function search(
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const q = String(req.query.q ?? "");
+    const results = await productService.searchProducts(q);
+    res.json(results);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function get(
   req: AuthedRequest,
   res: Response,
@@ -73,4 +87,3 @@ export async function remove(
     next(err);
   }
 }
-
