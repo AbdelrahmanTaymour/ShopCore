@@ -1,6 +1,10 @@
 # ---- builder ----
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # copy workspace-level files needed to resolve dependencies correctly
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
@@ -18,7 +22,7 @@ RUN pnpm exec prisma generate
 RUN pnpm build
 
 # ---- runner ----
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

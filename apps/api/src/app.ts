@@ -6,6 +6,7 @@ import { authRouter } from "./modules/auth/routes";
 import { productsRouter } from "./modules/products/routes";
 import { ordersRouter } from "./modules/orders/routes";
 import { webhookRouter } from "./modules/webhooks/routes";
+import { healthRouter } from "./modules/health/routes";
 import { errorHandler } from "./middleware/errorHandler";
 import { receiveStripeWebhook } from "./modules/webhooks/stripeController";
 
@@ -15,12 +16,6 @@ export function createApp(): Express {
   app.use(helmet());
   app.use(globalRateLimit);
   app.use(cors());
-
-  app.use(
-    "/api/v1/webhooks",
-    express.raw({ type: "application/json" }),
-    webhookRouter,
-  );
 
   app.post(
     "/api/v1/webhooks/stripe",
@@ -40,6 +35,7 @@ export function createApp(): Express {
     res.json({ status: "ok" });
   });
 
+  app.use("/health", healthRouter);
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/products", productsRouter);
   app.use("/api/v1/orders", ordersRouter);
